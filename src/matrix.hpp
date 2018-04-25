@@ -146,11 +146,11 @@ public:
 		}
 
 		bool operator !=(Iterator const & that) {
-			return this->currentPointer != that->currentPointer;
+			return this->currentPointer != that.currentPointer;
 		}
 
-		T* operator*() {
-			return currentPointer;
+		T& operator*() {
+			return *currentPointer;
 		}
 	};
 
