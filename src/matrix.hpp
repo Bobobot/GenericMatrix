@@ -110,12 +110,14 @@ public:
 
 	class Iterator {
 		T* currentPointer;
-		int currentX = 0;
-		int currentY = 0;
+		int currentX;
+		int currentY;
 		//TODO not sure if actually needed
 		bool iterateRight = true; //If false, the iteration goes column by column instead of row by row
 	public:
-		Iterator(T* currentPointer) :currentPointer(currentPointer) {}
+		Iterator(T* currentPointer) :currentPointer(currentPointer), currentX(0), currentY(0) {}
+
+		Iterator(int x, int y) :currentX(x), currentY(y) {}
 
 		Iterator& operator++(int) {
 			Iterator oldIterator = *this;
@@ -155,16 +157,11 @@ public:
 	};
 
 	Iterator begin() {
-		currentX = 0;
-		currentY = 0;
-		currentPointer = pData[0][0];
-		return currentPointer;
+		return Iterator(0, 0)
 	}
 
 	Iterator end() {
-		currentX = width - 1;
-		currentY = height - 1;
-		currentPointer
+		return Iterator(width - 1, height - 1);
 	}
 
 	~Matrix() {
