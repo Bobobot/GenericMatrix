@@ -5,31 +5,39 @@
 
 template <class T>
 class Matrix : public Serializable {
-	int width;
 	int height;
+	int width;
 	T** pData;
 public:
-	Matrix(int width = 1, int height = 1) :width(width), height(height) {
-		pData = new T*[width];
-		for (int i = 0; i < width; i++) {
-			pData[i] = new T[height];
+	Matrix(int height = 1, int width= 1) :height(height), width(width) {
+		pData = new T*[height];
+		for (int i = 0; i < height; i++) {
+			pData[i] = new T[width];
+			//TODO: remove this
+			for (int j = 0; j < width; j++) {
+				pData[i][j] = 1;
+			}
+			//TODO: endremove
 		}
+		std::cout << "pData pointer address: " << static_cast<void*>(pData) << std::endl;
+		std::cout << "Original matrix:" << std::endl;
+		print();
 	}
 
 	Matrix(const Matrix& m) {
-		width = m.getWidth();
 		height = m.getHeight();
-		pData = new T*[width];
-		for (int i = 0; i < width; i++) {
-			pData[i] = new T[height];
-			for (int j = 0; j < height; j++) {
+		width = m.getWidth();
+		pData = new T*[height];
+		for (int i = 0; i < height; i++) {
+			pData[i] = new T[width];
+			for (int j = 0; j < width; j++) {
 				pData[i][j] = m[i][j];
 			}
 		}
 	}
 
-	int getWidth() const { return width; }
 	int getHeight() const { return height; }
+	int getWidth() const { return width; }
 
 	Matrix operator+(Matrix m) { //throws error if the two matrices are not of equal size
 		if ((width == m.getWidth()) && (height == m.getHeight())) {
@@ -97,58 +105,71 @@ public:
 	}
 
 	Matrix operator=(Matrix m) {
+		for (int i = 0; i < width; i++) {
+			delete[] pData[i];
+		}
 		delete[] pData; //TODO operator=
+		height = m.getHeight();
+		width = m.getWidth();
+		pData = new T*[height];
+		for (int i = 0; i < height; i++) {
+			pData[i] = new T[width];
+			for (int j = 0; j < width; j++) {
+				pData[i][j] = m[i][j];
+			}
+		}
 	}
 
 	void print() {
-		//TODO print
+		//TODO do it with iterators
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				std::cout << " " << pData[i][j] << " ";
+			}
+			std::cout << std::endl;
+		}
 	}
 
 	void fill(T t) {
-		//TODO fill
+		Iterator it = begin();
+		do {
+			*it = t;
+		} while (it++ != end());
 	}
 
 	class Iterator {
 		T* currentPointer;
-		int currentX;
-		int currentY;
-		//TODO not sure if actually needed
-		bool iterateRight = true; //If false, the iteration goes column by column instead of row by row
+		int currentPos;
+		int maxPos;
 	public:
-		Iterator(T* currentPointer) :currentPointer(currentPointer), currentX(0), currentY(0) {}
+		Iterator(T* currentPointer, int currentX, int currentY, int height, int width) :currentPointer(currentPointer), currentPos((currentX + 1) * (currentY + 1)), maxPos(width * height) {}
 
-		Iterator(int x, int y) :currentX(x), currentY(y) {}
-
-		Iterator& operator++(int) {
+		Iterator operator++(int) {
 			Iterator oldIterator = *this;
+			currentPointer++;
 
-			if (iterateRight) {
-				if (currentX++ == width) {
-					currentX = 0;
-					currentY++;
-				}
-				if (currentY == height) {
-					currentPointer = end();
-				} else {
-					currentPointer = pData[currentX][currentY];
-				}
-			} else { //We iterate downwards - useful with Matrix multiplication
-				if (currentY++ == height) {
-					currentY = 0;
-					currentX++;
-				}
-				if (currentX == width) {
-					currentPointer = end();
-				} else {
-					currentPointer = pData[currentX][currentY];
-				}
+			/*if (currentX++ == width) { //If we get to the last row, we want to reset the X coordinate
+				currentX = 0;
+				currentY++;
 			}
-
+			if (currentY == height) { //The last column is actually (height-1), so if we get here that means we are past the last item
+				currentPointer = &(pData[width - 1][height - 1]); //end()
+			} else {
+				currentPointer = &(pData[currentX][currentY]);
+			}
+			*/
+			if (currentPos++ > maxPos) {
+				throw std::runtime_error("Iterator out of bounds");
+			}
 			return oldIterator;
 		}
 
 		bool operator !=(Iterator const & that) {
 			return this->currentPointer != that.currentPointer;
+		}
+
+		void operator=(T t) {
+			*currentPointer = t;
 		}
 
 		T& operator*() {
@@ -157,11 +178,11 @@ public:
 	};
 
 	Iterator begin() {
-		return Iterator(0, 0)
+		return Iterator(&(pData[0][0]), 0, 0, height, width);
 	}
 
 	Iterator end() {
-		return Iterator(width - 1, height - 1);
+		return Iterator(&(pData[height- 1][width- 1]), 0, 0, height - 1, width- 1);
 	}
 
 	~Matrix() {
