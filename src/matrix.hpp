@@ -49,24 +49,23 @@ public:
 		}
 	}
 
-	Matrix operator*(int i) {
+	Matrix operator*(T t) {
 		Matrix newMatrix(width, height);
 		newMatrix = *this;
-		Matrix::Iterator it = begin();
-		while (it != end()) {
-			*it++ = *it * i;
+		Matrix::Iterator it = newMatrix.begin();
+		while (it != newMatrix.end()) {
+			*it++ *= t;
 		}
 		return newMatrix;
 	}
 
-	Matrix operator*(Matrix m) { //throws error if the two matrices are not able to be multipled
+	Matrix operator*(Matrix m) { //throws error if the two matrices can not be multipled
 		if (width != m.getHeight()) {
 			throw std::runtime_error("The two Matrices can not be multiplied!");
 		} else {
 			Matrix newMatrix(m.getWidth(), height);
 			newMatrix.fill(0);
 			//Not done with iterators as that would be unnecessarily complicated - this way it's only necessarily complicated
-			int x2 = 0;
 			int y2 = 0;
 			if (height < m.getWidth()) {
 				for (int y1 = 0; y1 < height; y1++) {
@@ -140,6 +139,7 @@ public:
 		T& operator*() {
 			return *currentPointer;
 		}
+
 	};
 
 	Iterator begin() {
@@ -150,12 +150,24 @@ public:
 		return Iterator(&(pData[height*width]));
 	}
 
-	void write(std::ostream& os) const {
-		//TODO
+	void write(std::ostream& os) {
+		Iterator it = begin();
+		os << height << std::endl;
+		os << width << std::endl;
+		while (it != end()) {
+			os << *it++ << std::endl;
+		}
 	}
 
 	void read(std::istream& is) {
-		//TODO
+		is >> height;
+		is >> width;
+		delete[] pData;
+		pData = new T[height*width];
+		Iterator it = begin();
+		while (it != end()) {
+			(is >> *it++).ignore(1);
+		}
 	}
 
 	~Matrix() {
@@ -165,7 +177,7 @@ public:
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, Matrix<T> m) {
-	Matrix<T>::Iterator it = m.begin();
+	typename Matrix<T>::Iterator it = m.begin();
 	int i = 0;
 	while (it != m.end()) {
 		os << *it++ << " ";
